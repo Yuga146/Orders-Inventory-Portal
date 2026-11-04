@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Inventory & Order Management Portal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blackgold: {
+                            950: '#070707',
+                            900: '#0F0F0F',
+                            800: '#171717',
+                            700: '#262626',
+                        },
+                        luxgold: {
+                            100: '#FFFDF0',
+                            200: '#F9F1E0',
+                            300: '#FFE58F',
+                            400: '#E6CA65',
+                            500: '#D4AF37',
+                            600: '#AA820A',
+                            700: '#856404',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Luxurious Light Theme (Warm Cream & Rich Gold) */
+        body {
+            background: radial-gradient(circle at top, #FFFDF0 0%, #F5E9CC 100%) !important;
+            color: #2A2A2A !important;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .portal-box {
+            background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF9 100%) !important;
+            border: 2px solid #D4AF37 !important;
+            color: #2A2A2A !important;
+            box-shadow: 0 15px 50px rgba(212, 175, 55, 0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        .portal-input {
+            background-color: #FFFDF0 !important;
+            color: #2A2A2A !important;
+            border: 2px solid #D4AF37 !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .portal-header-bg {
+            background: linear-gradient(135deg, #856404 0%, #AA820A 50%, #D4AF37 100%) !important;
+            color: #FFFDF0 !important;
+            border-bottom: 3px solid #FFE58F;
+            box-shadow: 0 10px 30px rgba(133, 100, 4, 0.3);
+        }
+
+        /* Luxurious Dark Theme (Obsidian & Pure Metallic Gold) */
+        body.theme-dark {
+            background: radial-gradient(circle at top, #121212 0%, #050505 100%) !important;
+            color: #F9F1E0 !important;
+        }
+        body.theme-dark .portal-box {
+            background: linear-gradient(135deg, #141414 0%, #0D0D0D 100%) !important;
+            border: 2px solid #D4AF37 !important;
+            color: #F9F1E0 !important;
+            box-shadow: 0 15px 50px rgba(212, 175, 55, 0.12), inset 0 1px 0 rgba(255,215,0,0.1);
+        }
+        body.theme-dark .portal-input {
+            background-color: #1A1A1A !important;
+            color: #FFFDF0 !important;
+            border: 2px solid #D4AF37 !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        body.theme-dark .portal-header-bg {
+            background: linear-gradient(135deg, #1C1C1C 0%, #0E0E0E 100%) !important;
+            border-bottom: 3px solid #D4AF37;
+            color: #FFE58F !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+        body.theme-dark .text-amber-900,
+        body.theme-dark .text-gray-900,
+        body.theme-dark .text-gray-800,
+        body.theme-dark .text-gray-700 {
+            color: #FFE58F !important;
+        }
+        body.theme-dark .text-gray-500,
+        body.theme-dark .text-gray-400 {
+            color: #E6CA65 !important;
+        }
+    </style>
+</head>
+<body id="app-body" class="min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300">
+
+    <!-- HIDDEN FILE INPUT FOR LOGO UPLOADS -->
+    <input type="file" id="hidden-logo-input" accept="image/*" onchange="handleLogoUpload(event)" class="hidden">
+
+    <!-- LOGIN SCREEN CONTAINER -->
+    <div id="login-screen" class="portal-box w-full max-w-md p-8 rounded-3xl text-center space-y-6 transition-all duration-300 relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="space-y-1 relative z-10">
+            <h1 class="text-3xl font-extrabold text-amber-600 tracking-wide">Hi 👋</h1>
+            <p class="text-xs text-gray-500 font-medium">Please log in to access your luxury inventory portal</p>
+        </div>
+        
+        <form onsubmit="handleLogin(event)" class="space-y-4 text-left relative z-10">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1">Username:</label>
+                <input type="text" id="login-user" required placeholder="Enter username" class="portal-input w-full p-3.5 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1">PIN Password:</label>
+                <input type="password" id="login-pass" inputmode="numeric" pattern="[0-9]*" required placeholder="Enter 4-digit PIN" class="portal-input w-full p-3.5 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+            <button type="submit" class="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 text-white py-4 rounded-2xl font-extrabold hover:opacity-90 transition shadow-lg text-sm mt-2 tracking-wider border border-amber-300/40">
+                Login to Portal ✨
+            </button>
+        </form>
+    </div>
+
+    <!-- MAIN PORTAL DASHBOARD (Hidden Until Login) -->
+    <div id="portal-dashboard" class="hidden w-full max-w-5xl mx-auto space-y-6 py-4">
+        
+        <!-- Portal Header -->
+        <header id="portal-header" class="portal-box portal-header-bg p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-300 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none"></div>
+            <div class="flex items-center gap-4 relative z-10">
+                <img id="portal-logo-header" src="" alt="Logo" class="w-14 h-14 min-w-[3.5rem] min-h-[3.5rem] aspect-square object-cover rounded-full border-2 border-amber-200 shadow-xl hidden">
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-wide drop-shadow-sm">📦 Store Orders Inventory</h1>
+                    <p class="text-xs opacity-90 font-medium mt-0.5">Live luxury order collection and management dashboard</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap relative z-10">
+                <button onclick="triggerLogoUpload()" class="bg-amber-600/90 hover:bg-amber-500 text-white px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md transition border border-amber-300/50 backdrop-blur-sm">
+                    🖼️ Logo
+                </button>
+
+                <button onclick="toggleTheme()" id="theme-toggle-btn" class="bg-black/40 hover:bg-black/60 border border-amber-300/50 px-4 py-2.5 rounded-2xl text-xs font-bold text-amber-300 shadow-md flex items-center gap-1 transition backdrop-blur-sm">
+                    ✨ Dark Theme
+                </button>
+                
+                <button onclick="handleLogout()" class="bg-red-700/90 hover:bg-red-800 text-white px-4 py-2.5 rounded-2xl text-xs font-bold transition shadow-md border border-red-400/50 backdrop-blur-sm">
+                    🚪 Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- NAVIGATION TABS -->
+        <div class="flex gap-3 portal-box p-2.5 rounded-3xl">
+            <button onclick="switchTab('orders')" id="nav-btn-orders" class="flex-1 py-3.5 rounded-2xl text-xs font-extrabold bg-amber-700 text-white shadow-md transition tracking-wider border border-amber-500/40">📋 Orders Management</button>
+            <button onclick="switchTab('stats')" id="nav-btn-stats" class="flex-1 py-3.5 rounded-2xl text-xs font-extrabold bg-gray-100 text-gray-700 hover:bg-gray-200 transition tracking-wider border border-transparent">📊 Statistics Dashboard</button>
+        </div>
+
+        <!-- PAGE 1: ORDERS MANAGEMENT -->
+        <div id="page-orders" class="portal-box p-6 rounded-3xl space-y-5 transition-all duration-300">
+            
+            <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                <!-- NUMERIC SEARCH BAR FOR ORDER ID -->
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-amber-600 font-bold text-base">🔍</span>
+                    <input type="text" id="order-search-input" inputmode="numeric" pattern="[0-9]*" oninput="renderOrdersList()" placeholder="Search Order ID numbers only (e.g. 8965)" class="portal-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+
+                <!-- CUSTOM LUXURIOUS FILTER DROPDOWN TOGGLE -->
+                <div class="relative w-full sm:w-72">
+                    <button onclick="toggleFilterMenu()" id="filter-dropdown-btn" class="portal-input w-full p-3.5 rounded-2xl text-xs font-bold shadow-sm flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        <span id="filter-btn-text">📁 All Orders</span>
+                        <span>▼</span>
+                    </button>
+                    <!-- Dropdown Options Box -->
+                    <div id="filter-menu-options" class="hidden absolute left-0 right-0 mt-2 portal-box rounded-2xl shadow-2xl z-50 overflow-hidden font-bold text-xs backdrop-blur-xl">
+                        <div onclick="selectStatusFilter('all', '📁 All Orders')" class="p-3.5 hover:bg-amber-600/20 cursor-pointer border-b border-amber-500/20 transition">📁 All Orders</div>
+                        <div onclick="selectStatusFilter('Pending', '⏳ Pending')" class="p-3.5 hover:bg-amber-600/20 cursor-pointer border-b border-amber-500/20 transition">⏳ Pending</div>
+                        <div onclick="selectStatusFilter('Pending Payment', '💳 Pending Payment')" class="p-3.5 hover:bg-amber-600/20 cursor-pointer border-b border-amber-500/20 transition">💳 Pending Payment</div>
+                        <div onclick="selectStatusFilter('Pending Delivery', '🚚 Pending Delivery')" class="p-3.5 hover:bg-amber-600/20 cursor-pointer border-b border-amber-500/20 transition">🚚 Pending Delivery</div>
+                        <div onclick="selectStatusFilter('Delivery Completed', '✅ Delivery Completed')" class="p-3.5 hover:bg-amber-600/20 cursor-pointer border-b border-amber-500/20 transition">✅ Delivery Completed</div>
+                        <div onclick="selectStatusFilter('Cancelled', '❌ Cancelled')" class="p-3.5 hover:bg-amber-600/20 cursor-pointer transition">❌ Cancelled</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders List Container -->
+            <div id="admin-order-list" class="space-y-4">
+                <p class="text-sm text-gray-500 py-10 text-center font-medium">Loading incoming orders...</p>
+            </div>
+        </div>
+
+        <!-- PAGE 2: STATISTICS DASHBOARD -->
+        <div id="page-stats" class="hidden space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="portal-box p-7 rounded-3xl text-center shadow-lg relative overflow-hidden">
+                    <p class="text-xs font-extrabold uppercase tracking-widest mb-1.5 text-amber-600">All Orders</p>
+                    <p id="stat-all" class="text-5xl font-black">0</p>
+                </div>
+                <div class="portal-box bg-yellow-50/10 p-7 rounded-3xl border-2 border-yellow-400/50 text-center shadow-lg relative overflow-hidden">
+                    <p class="text-xs font-extrabold uppercase tracking-widest mb-1.5 text-yellow-600">Pending</p>
+                    <p id="stat-pending" class="text-5xl font-black text-yellow-500">0</p>
+                </div>
+                <div class="portal-box bg-orange-50/10 p-7 rounded-3xl border-2 border-orange-400/50 text-center shadow-lg relative overflow-hidden">
+                    <p class="text-xs font-extrabold uppercase tracking-widest mb-1.5 text-orange-600">Pending Payment</p>
+                    <p id="stat-pending-payment" class="text-5xl font-black text-orange-500">0</p>
+                </div>
+                <div class="portal-box bg-blue-50/10 p-7 rounded-3xl border-2 border-blue-400/50 text-center shadow-lg relative overflow-hidden">
+                    <p class="text-xs font-extrabold uppercase tracking-widest mb-1.5 text-blue-600">Pending Delivery</p>
+                    <p id="stat-pending-delivery" class="text-5xl font-black text-blue-500">0</p>
+                </div>
+                <div class="portal-box bg-green-50/10 p-7 rounded-3xl border-2 border-green-400/50 text-center shadow-lg relative overflow-hidden">
+                    <p class="text-xs font-extrabold uppercase tracking-widest mb-1.5 text-green-600">Delivery Completed</p>
+                    <p id="stat-delivery-completed" class="text-5xl font-black text-green-500">0</p>
+                </div>
+                <div class="portal-box bg-red-50/10 p-7 rounded-3xl border-2 border-red-400/50 text-center shadow-lg relative overflow-hidden">
+                    <p class="text-xs font-extrabold uppercase tracking-widest mb-1.5 text-red-600">Cancelled</p>
+                    <p id="stat-cancelled" class="text-5xl font-black text-red-500">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Logic & App Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDgcBDdJaGkEBS1ihJASDAayNHWgrJ-UN8",
+            authDomain: "deepavalicookies2026.firebaseapp.com",
+            databaseURL: "https://deepavalicookies2026-default-rtdb.firebaseio.com/",
+            projectId: "deepavalicookies2026",
+            storageBucket: "deepavalicookies2026.firebasestorage.app",
+            messagingSenderId: "648876725443",
+            appId: "1:648876725443:web:beabca40332d99f90fbe76",
+            measurementId: "G-CH5L1EP9SK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let orders = [];
+        let currentOrderStatusFilter = 'all';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('portal_theme') === 'dark') {
+                enableDarkTheme(true);
+            }
+
+            const savedLogo = localStorage.getItem('portal_logo');
+            if (savedLogo) {
+                applyLogo(savedLogo);
+            }
+
+            if (localStorage.getItem('portal_logged_in') === 'true') {
+                showDashboard();
+            }
+
+            window.addEventListener('click', (e) => {
+                const menu = document.getElementById('filter-menu-options');
+                const btn = document.getElementById('filter-dropdown-btn');
+                if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
+        });
+
+        window.toggleTheme = function() {
+            const isDark = document.body.classList.contains('theme-dark');
+            if (isDark) {
+                disableDarkTheme();
+            } else {
+                enableDarkTheme();
+            }
+        };
+
+        function enableDarkTheme(skipSave = false) {
+            document.body.classList.add('theme-dark');
+            const toggleBtn = document.getElementById('theme-toggle-btn');
+            if (toggleBtn) toggleBtn.innerHTML = '☀️ Light Theme';
+            if (!skipSave) localStorage.setItem('portal_theme', 'dark');
+        }
+
+        function disableDarkTheme() {
+            document.body.classList.remove('theme-dark');
+            const toggleBtn = document.getElementById('theme-toggle-btn');
+            if (toggleBtn) toggleBtn.innerHTML = '✨ Dark Theme';
+            localStorage.setItem('portal_theme', 'light');
+        }
+
+        window.switchTab = function(tab) {
+            const ordersPage = document.getElementById('page-orders');
+            const statsPage = document.getElementById('page-stats');
+            const ordersBtn = document.getElementById('nav-btn-orders');
+            const statsBtn = document.getElementById('nav-btn-stats');
+            const isDark = document.body.classList.contains('theme-dark');
+
+            if (tab === 'orders') {
+                ordersPage.classList.remove('hidden');
+                statsPage.classList.add('hidden');
+                ordersBtn.className = "flex-1 py-3.5 rounded-2xl text-xs font-extrabold bg-amber-700 text-white shadow-md transition tracking-wider border border-amber-500/40";
+                statsBtn.className = `flex-1 py-3.5 rounded-2xl text-xs font-extrabold ${isDark ? 'bg-[#1A1A1A] text-[#FFE58F] border border-[#D4AF37]/30' : 'bg-gray-100 text-gray-700'} hover:opacity-80 transition tracking-wider border border-transparent`;
+            } else {
+                ordersPage.classList.add('hidden');
+                statsPage.classList.remove('hidden');
+                statsBtn.className = "flex-1 py-3.5 rounded-2xl text-xs font-extrabold bg-amber-700 text-white shadow-md transition tracking-wider border border-amber-500/40";
+                ordersBtn.className = `flex-1 py-3.5 rounded-2xl text-xs font-extrabold ${isDark ? 'bg-[#1A1A1A] text-[#FFE58F] border border-[#D4AF37]/30' : 'bg-gray-100 text-gray-700'} hover:opacity-80 transition tracking-wider border border-transparent`;
+                updateStatistics();
+            }
+        };
+
+        window.toggleFilterMenu = function() {
+            const menu = document.getElementById('filter-menu-options');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        };
+
+        window.selectStatusFilter = function(status, label) {
+            currentOrderStatusFilter = status;
+            document.getElementById('filter-btn-text').innerText = label;
+            document.getElementById('filter-menu-options').classList.add('hidden');
+            renderOrdersList();
+        };
+
+        window.triggerLogoUpload = function() {
+            document.getElementById('hidden-logo-input').click();
+        };
+
+        window.handleLogoUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const logoDataUrl = e.target.result;
+                localStorage.setItem('portal_logo', logoDataUrl);
+                applyLogo(logoDataUrl);
+                alert("Store logo updated successfully!");
+            };
+            reader.readAsDataURL(file);
+        };
+
+        function applyLogo(logoUrl) {
+            const headerLogo = document.getElementById('portal-logo-header');
+            if (headerLogo) {
+                headerLogo.src = logoUrl;
+                headerLogo.classList.remove('hidden');
+            }
+        }
+
+        window.handleLogin = function(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+
+            if (user === 'Yuga' && pass === '1234') {
+                localStorage.setItem('portal_logged_in', 'true');
+                showDashboard();
+            } else {
+                alert("Incorrect Username or PIN Password! (Hint: Yuga / 1234)");
+            }
+        };
+
+        window.handleLogout = function() {
+            localStorage.removeItem('portal_logged_in');
+            document.getElementById('portal-dashboard').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+        };
+
+        function showDashboard() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('portal-dashboard').classList.remove('hidden');
+
+            onSnapshot(collection(db, "orders"), (snapshot) => {
+                orders = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+                updateStatistics();
+                renderOrdersList();
+            });
+        }
+
+        function updateStatistics() {
+            document.getElementById('stat-all').innerText = orders.length;
+            document.getElementById('stat-pending').innerText = orders.filter(o => (o.status || 'Pending') === 'Pending').length;
+            document.getElementById('stat-pending-payment').innerText = orders.filter(o => o.status === 'Pending Payment').length;
+            document.getElementById('stat-pending-delivery').innerText = orders.filter(o => o.status === 'Pending Delivery').length;
+            document.getElementById('stat-delivery-completed').innerText = orders.filter(o => o.status === 'Delivery Completed').length;
+            document.getElementById('stat-cancelled').innerText = orders.filter(o => o.status === 'Cancelled').length;
+        }
+
+        window.renderOrdersList = function() {
+            const container = document.getElementById('admin-order-list');
+            if (!container) return;
+
+            const searchQuery = document.getElementById('order-search-input').value.trim();
+
+            let filteredOrders = orders;
+            if (currentOrderStatusFilter !== 'all') {
+                filteredOrders = orders.filter(o => (o.status || 'Pending') === currentOrderStatusFilter);
+            }
+
+            if (searchQuery) {
+                filteredOrders = filteredOrders.filter(o => {
+                    const orderIdStr = (o.orderId || '').toUpperCase();
+                    const cleanQuery = searchQuery.replace(/\D/g, '');
+                    const cleanOrderId = orderIdStr.replace(/\D/g, '');
+                    return cleanQuery !== '' && cleanOrderId.includes(cleanQuery);
+                });
+            }
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `<p class="portal-box text-sm py-12 text-center rounded-3xl font-bold shadow-md">No matching orders found.</p>`;
+                return;
+            }
+
+            const sortedOrders = [...filteredOrders].sort((a, b) => {
+                const dateA = new Date(a.timestamp || 0);
+                const dateB = new Date(b.timestamp || 0);
+                return dateB - dateA;
+            });
+
+            container.innerHTML = '';
+            sortedOrders.forEach(o => {
+                const formattedDate = o.timestamp ? new Date(o.timestamp).toLocaleString() : 'N/A';
+                const status = o.status || 'Pending';
+                
+                let statusColor = 'bg-yellow-100 text-yellow-800 border-yellow-400';
+                if (status === 'Pending Payment') statusColor = 'bg-orange-100 text-orange-800 border-orange-400';
+                if (status === 'Pending Delivery') statusColor = 'bg-blue-100 text-blue-800 border-blue-400';
+                if (status === 'Delivery Completed') statusColor = 'bg-green-100 text-green-800 border-green-400';
+                if (status === 'Cancelled') statusColor = 'bg-red-100 text-red-800 border-red-400';
+
+                let itemsSummary = o.items ? o.items.map(i => `${i.name} (${i.qty}x)`).join(', ') : 'No items';
+
+                const deleteButtonHtml = status === 'Cancelled' 
+                    ? `<button onclick="deleteCancelledOrder('${o.docId}', '${o.orderId || 'Order'}')" class="bg-red-600 hover:bg-red-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-md">🗑️ Delete</button>`
+                    : '';
+
+                container.innerHTML += `
+                    <div class="order-card portal-box p-5 rounded-3xl shadow-lg flex flex-col gap-3 transition-all duration-300 relative overflow-hidden">
+                        <div class="flex justify-between items-start border-b border-amber-500/30 pb-3">
+                            <div>
+                                <span class="font-extrabold text-base text-amber-600 tracking-wide">${o.orderId || 'ORD-0000'}</span>
+                                <span class="text-xs opacity-75 block font-medium mt-0.5">${formattedDate}</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 flex-wrap justify-end">
+                                <span class="text-xs font-bold px-3.5 py-1 rounded-full border shadow-sm ${statusColor}">${status}</span>
+                                <select onchange="updateOrderStatus('${o.docId}', this.value)" class="portal-input text-xs rounded-xl p-2 font-bold shadow-sm">
+                                    <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="Pending Payment" ${status === 'Pending Payment' ? 'selected' : ''}>Pending Payment</option>
+                                    <option value="Pending Delivery" ${status === 'Pending Delivery' ? 'selected' : ''}>Pending Delivery</option>
+                                    <option value="Delivery Completed" ${status === 'Delivery Completed' ? 'selected' : ''}>Delivery Completed</option>
+                                    <option value="Cancelled" ${status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                </select>
+                                ${deleteButtonHtml}
+                            </div>
+                        </div>
+                        <div class="text-xs space-y-1.5 font-medium">
+                            <p><strong>Customer:</strong> <span class="font-semibold">${o.customerName}</span> (<a href="https://wa.me/6${o.customerPhone}" target="_blank" class="text-amber-500 underline font-bold">${o.customerPhone}</a>)</p>
+                            <p><strong>Items Ordered:</strong> <span class="opacity-90">${itemsSummary}</span></p>
+                            <p class="font-extrabold text-sm mt-2 text-amber-600">Total Amount: RM ${(o.totalAmount || 0).toFixed(2)}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        window.updateOrderStatus = async function(docId, newStatus) {
+            try {
+                await updateDoc(doc(db, "orders", docId), { status: newStatus });
+            } catch (err) {
+                console.error("Error updating status:", err);
+                alert("Failed to update order status.");
+            }
+        };
+
+        window.deleteCancelledOrder = async function(docId, orderId) {
+            if (confirm(`Are you sure you want to permanently delete cancelled order ${orderId}?`)) {
+                try {
+                    await deleteDoc(doc(db, "orders", docId));
+                } catch (err) {
+                    console.error("Error deleting order:", err);
+                    alert("Failed to delete order.");
+                }
+            }
+        };
+    </script>
+</body>
+</html>
